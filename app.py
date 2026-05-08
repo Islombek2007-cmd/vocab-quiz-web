@@ -417,6 +417,27 @@ def my_students():
     
     return render_template("my_students.html", students=student_data)
 
+
+
+
+
+
+@app.route("/telegram_auth")
+def telegram_auth():
+    # Get user data from Telegram Web App
+    user_data = request.args.get('user')
+    if user_data:
+        import json
+        user = json.loads(user_data)
+        # Auto-login as student using Telegram ID
+        session["telegram_id"] = user['id']
+        session["username"] = user.get('username', 'telegram_user')
+        session["full_name"] = user.get('first_name', '')
+        session["role"] = "student"
+        return redirect(url_for("quiz"))
+    return redirect(url_for("index"))
+
+    
 # ============ Student Routes ============
 
 @app.route("/take_quiz", methods=["GET", "POST"])
