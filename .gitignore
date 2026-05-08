@@ -1,0 +1,4 @@
+echo config.py >> .gitignore
+echo .env >> .gitignore
+echo __pycache__/ >> .gitignore
+echo *.db >> .gitignore
