@@ -3,9 +3,7 @@ import sqlite3
 import random
 import secrets
 import string
-
 import os
-
 
 app = Flask(__name__)
 app.secret_key = "vocabquiz_secret_key_2025"
@@ -15,7 +13,6 @@ from database.db import get_connection
 # ============ Helper Functions ============
 
 def generate_login_code():
-    """Generate random 25-character code"""
     chars = string.ascii_letters + string.digits
     return ''.join(secrets.choice(chars) for _ in range(25))
 
@@ -39,22 +36,6 @@ def get_user_stats():
     conn.close()
     return {"total_words": total_words, "total_students": total_students, "total_quizzes": total_quizzes}
 
-def get_teacher_students(teacher_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, username, full_name, login_code FROM users WHERE created_by = ? AND role = 'student'", (teacher_id,))
-    students = cursor.fetchall()
-    conn.close()
-    return students
-
-def get_teacher_vocabulary(teacher_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, word, translation FROM vocabulary WHERE teacher_id = ?", (teacher_id,))
-    vocab = cursor.fetchall()
-    conn.close()
-    return vocab
-
 # ============ Routes ============
 
 @app.route("/", methods=["GET"])
@@ -67,7 +48,7 @@ def login_code():
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, full_name, role, created_by FROM users WHERE login_code = ? AND role = 'student'", (login_code,))
+    cursor.execute("SELECT id, username, full_name, role, created_by FROM users WHERE login_code = %s AND role = 'student'", (login_code,))
     user = cursor.fetchone()
     conn.close()
     
@@ -76,7 +57,7 @@ def login_code():
         session["username"] = user[1]
         session["role"] = user[3]
         session["full_name"] = user[2]
-        session["teacher_id"] = user[4]  # Store which teacher owns this student
+        session["teacher_id"] = user[4]
         return redirect(url_for("home"))
     else:
         return render_template("login.html", error="Invalid login code. Please check with your teacher.")
@@ -88,7 +69,7 @@ def login_staff():
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, password, full_name, role FROM users WHERE username = ? AND role IN ('owner', 'admin', 'teacher')", (username,))
+    cursor.execute("SELECT id, username, password, full_name, role FROM users WHERE username = %s AND role IN ('owner', 'admin', 'teacher')", (username,))
     user = cursor.fetchone()
     conn.close()
     
@@ -156,7 +137,7 @@ def change_password():
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET password = ? WHERE id = ?", (new_password, session["user_id"]))
+    cursor.execute("UPDATE users SET password = %s WHERE id = %s", (new_password, session["user_id"]))
     conn.commit()
     conn.close()
     
@@ -208,7 +189,7 @@ def delete_admin(admin_id):
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id = ? AND role = 'admin'", (admin_id,))
+    cursor.execute("DELETE FROM users WHERE id = %s AND role = 'admin'", (admin_id,))
     conn.commit()
     conn.close()
     
@@ -266,7 +247,7 @@ def add_teacher():
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO users (username, password, full_name, role, created_by) VALUES (?, ?, ?, 'teacher', ?)",
+            "INSERT INTO users (username, password, full_name, role, created_by) VALUES (%s, %s, %s, 'teacher', %s)",
             (username, password, full_name, session["user_id"])
         )
         conn.commit()
@@ -283,10 +264,7 @@ def delete_teacher(teacher_id):
     
     conn = get_connection()
     cursor = conn.cursor()
-    # Delete all students of this teacher first
-    cursor.execute("DELETE FROM users WHERE created_by = ? AND role = 'student'", (teacher_id,))
-    # Delete teacher
-    cursor.execute("DELETE FROM users WHERE id = ? AND role = 'teacher'", (teacher_id,))
+    cursor.execute("DELETE FROM users WHERE id = %s AND role = 'teacher'", (teacher_id,))
     conn.commit()
     conn.close()
     
@@ -299,9 +277,9 @@ def manage_students(teacher_id):
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT full_name FROM users WHERE id = ?", (teacher_id,))
+    cursor.execute("SELECT full_name FROM users WHERE id = %s", (teacher_id,))
     teacher = cursor.fetchone()
-    cursor.execute("SELECT id, username, full_name, login_code FROM users WHERE created_by = ? AND role = 'student'", (teacher_id,))
+    cursor.execute("SELECT id, username, full_name, login_code FROM users WHERE created_by = %s AND role = 'student'", (teacher_id,))
     students = cursor.fetchall()
     conn.close()
     
@@ -323,7 +301,7 @@ def add_student(teacher_id):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO users (username, full_name, role, created_by, login_code) VALUES (?, ?, 'student', ?, ?)",
+            "INSERT INTO users (username, full_name, role, created_by, login_code) VALUES (%s, %s, 'student', %s, %s)",
             (username, student_name, teacher_id, login_code)
         )
         conn.commit()
@@ -340,11 +318,11 @@ def delete_student(student_id):
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT created_by FROM users WHERE id = ?", (student_id,))
+    cursor.execute("SELECT created_by FROM users WHERE id = %s", (student_id,))
     student = cursor.fetchone()
     teacher_id = student[0] if student else None
     
-    cursor.execute("DELETE FROM users WHERE id = ? AND role = 'student'", (student_id,))
+    cursor.execute("DELETE FROM users WHERE id = %s AND role = 'student'", (student_id,))
     conn.commit()
     conn.close()
     
@@ -359,7 +337,12 @@ def manage_vocabulary():
     if "user_id" not in session or session.get("role") != "teacher":
         return redirect(url_for("home"))
     
-    vocabulary = get_teacher_vocabulary(session["user_id"])
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, word, translation FROM vocabulary WHERE teacher_id = %s", (session["user_id"],))
+    vocabulary = cursor.fetchall()
+    conn.close()
+    
     return render_template("manage_vocabulary.html", vocabulary=vocabulary)
 
 @app.route("/add_vocab", methods=["POST"])
@@ -373,7 +356,7 @@ def add_vocab():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO vocabulary (word, translation, teacher_id) VALUES (?, ?, ?)",
+        "INSERT INTO vocabulary (word, translation, teacher_id) VALUES (%s, %s, %s)",
         (word, translation, session["user_id"])
     )
     conn.commit()
@@ -388,7 +371,7 @@ def delete_vocab(vocab_id):
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM vocabulary WHERE id = ? AND teacher_id = ?", (vocab_id, session["user_id"]))
+    cursor.execute("DELETE FROM vocabulary WHERE id = %s AND teacher_id = %s", (vocab_id, session["user_id"]))
     conn.commit()
     conn.close()
     
@@ -402,8 +385,7 @@ def my_students():
     conn = get_connection()
     cursor = conn.cursor()
     
-    # Get all students created by this teacher
-    cursor.execute("SELECT id, username, full_name, login_code FROM users WHERE created_by = ? AND role = 'student'", (session["user_id"],))
+    cursor.execute("SELECT id, username, full_name, login_code FROM users WHERE created_by = %s AND role = 'student'", (session["user_id"],))
     students = cursor.fetchall()
     
     student_data = []
@@ -412,11 +394,10 @@ def my_students():
         student_name = student[2]
         student_code = student[3]
         
-        # Get quiz stats for this student
-        cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = ?", (student_id,))
+        cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = %s", (student_id,))
         total_quizzes = cursor.fetchone()[0]
         
-        cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = ? AND correct = 1", (student_id,))
+        cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = %s AND correct = true", (student_id,))
         correct_count = cursor.fetchone()[0]
         
         accuracy = 0
@@ -436,74 +417,6 @@ def my_students():
     
     return render_template("my_students.html", students=student_data)
 
-@app.route("/teacher_student_progress/<int:student_id>")
-def teacher_student_progress(student_id):
-    if "user_id" not in session or session.get("role") != "teacher":
-        return redirect(url_for("home"))
-    
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT v.word, v.translation, qr.correct, qr.date 
-        FROM quiz_results qr
-        JOIN vocabulary v ON qr.word_id = v.id
-        WHERE qr.student_id = ? AND v.teacher_id = ?
-        ORDER BY qr.date DESC LIMIT 30
-    ''', (student_id, session["user_id"]))
-    results = cursor.fetchall()
-    
-    cursor.execute("SELECT full_name FROM users WHERE id = ?", (student_id,))
-    student = cursor.fetchone()
-    conn.close()
-    
-    return render_template("teacher_student_progress.html", 
-                          results=results, 
-                          student_name=student[0] if student else "Unknown")
-
-
-
-
-
-
-
-
-
-@app.route("/teacher_add_student", methods=["POST"])
-def teacher_add_student():
-    if "user_id" not in session or session.get("role") != "teacher":
-        return redirect(url_for("home"))
-    
-    student_name = request.form["student_name"].strip()
-    login_code = generate_login_code()
-    username = f"student_{login_code[:8]}"
-    
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO users (username, full_name, role, created_by, login_code) VALUES (?, ?, 'student', ?, ?)",
-            (username, student_name, session["user_id"], login_code)
-        )
-        conn.commit()
-    except:
-        pass
-    conn.close()
-    
-    return redirect(url_for("my_students"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ============ Student Routes ============
 
 @app.route("/take_quiz", methods=["GET", "POST"])
@@ -511,14 +424,17 @@ def take_quiz():
     if "user_id" not in session or session.get("role") != "student":
         return redirect(url_for("home"))
     
-    # Get the teacher who owns this student
     student = get_user_by_id(session["user_id"])
     teacher_id = student[5] if student else None
     
     if not teacher_id:
         return render_template("quiz.html", question=None, result="No teacher assigned to you.")
     
-    vocabulary = get_teacher_vocabulary(teacher_id)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, word, translation FROM vocabulary WHERE teacher_id = %s", (teacher_id,))
+    vocabulary = cursor.fetchall()
+    conn.close()
     
     result = None
     question_word = None
@@ -535,7 +451,7 @@ def take_quiz():
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO quiz_results (student_id, word_id, correct) VALUES (?, ?, ?)",
+            "INSERT INTO quiz_results (student_id, word_id, correct) VALUES (%s, %s, %s)",
             (session["user_id"], word_id, is_correct)
         )
         conn.commit()
@@ -565,9 +481,9 @@ def my_progress():
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = ? AND correct = 1", (session["user_id"],))
+    cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = %s AND correct = true", (session["user_id"],))
     correct = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = ? AND correct = 0", (session["user_id"],))
+    cursor.execute("SELECT COUNT(*) FROM quiz_results WHERE student_id = %s AND correct = false", (session["user_id"],))
     wrong = cursor.fetchone()[0]
     total = correct + wrong
     percentage = (correct / total * 100) if total > 0 else 0
@@ -576,7 +492,7 @@ def my_progress():
         SELECT v.word, v.translation, qr.correct, qr.date 
         FROM quiz_results qr 
         JOIN vocabulary v ON qr.word_id = v.id 
-        WHERE qr.student_id = ? 
+        WHERE qr.student_id = %s 
         ORDER BY qr.date DESC LIMIT 20
     ''', (session["user_id"],))
     recent = cursor.fetchall()
