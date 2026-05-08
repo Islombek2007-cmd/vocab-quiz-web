@@ -22,7 +22,7 @@ def generate_login_code():
 def get_user_by_id(user_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, password, full_name, role, created_by, center_name, login_code FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT id, username, password, full_name, role, created_by, center_name, login_code FROM users WHERE id = %s", (user_id,))
     user = cursor.fetchone()
     conn.close()
     return user
@@ -191,7 +191,7 @@ def add_admin():
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO users (username, password, full_name, role, center_name, created_by) VALUES (?, ?, ?, 'admin', ?, ?)",
+            "INSERT INTO users (username, password, full_name, role, center_name, created_by) VALUES (%s, %s, %s, 'admin', %s, %s)",
             (username, password, full_name, center_name, session["user_id"])
         )
         conn.commit()
