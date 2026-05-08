@@ -1,11 +1,19 @@
 import os
 import psycopg2
+import traceback
 
-# Get database URL from environment variable
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://vocab_quiz_bot_user:8l8V1ZGeAwpZMo8cW52UBzAAqfqa43mn@dpg-d7v295naqgkc73d3609g-a/vocab_quiz_bot')
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set!")
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+    try:
+        return psycopg2.connect(DATABASE_URL)
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        print(traceback.format_exc())
+        raise
 
 def setup_database():
     conn = get_connection()
@@ -59,4 +67,9 @@ def setup_database():
     print("PostgreSQL database ready")
 
 # Run setup when imported
-setup_database()
+try:
+    setup_database()
+except Exception as e:
+    print(f"Setup failed: {e}")
+    import traceback
+    traceback.print_exc()
