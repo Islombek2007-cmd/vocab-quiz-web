@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - VocabQuiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">📝</div>
+            <h1>Create Account</h1>
+            <p>Join VocabQuiz as a Student</p>
+            
+            {% if error %}
+            <div class="error-msg">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" name="full_name" placeholder="Your full name" required>
+                </div>
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Choose a username" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Choose a password" required>
+                </div>
+                <div class="input-group">
+                    <label>Role</label>
+                    <select name="role" required>
+                        <option value="student">🎓 Student</option>
+                    </select>
+                </div>
+                <button type="submit">Register →</button>
+            </form>
+            
+            <div class="login-footer">
+                <a href="/">Already have an account? Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

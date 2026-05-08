@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Students - VocabQuiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        <div class="dashboard-content">
+            <h1>My Students</h1>
+            
+            <h2>Add New Student</h2>
+            <form method="POST" action="/teacher_add_student">
+                <input type="text" name="student_name" placeholder="Student Name" required>
+                <button type="submit">Generate Code</button>
+            </form>
+            
+            <hr>
+            
+            <h2>Existing Students</h2>
+            {% if students %}
+                {% for student in students %}
+                <div class="student-card">
+                    <h3>👨‍🎓 {{ student.name }}</h3>
+                    <p><strong>Login Code:</strong> <code>{{ student.code }}</code></p>
+                    <p>📝 Quizzes taken: {{ student.total_quizzes }}</p>
+                    <p>✅ Correct answers: {{ student.correct }}</p>
+                    <p>📊 Accuracy: {{ student.accuracy }}%</p>
+                    <hr>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No students yet. Add one above.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

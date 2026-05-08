@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Panel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Teacher Panel - {{ teacher_name }}</h1>
+        <h2>Add Vocabulary</h2>
+        <form method="POST" action="/add_vocab">
+            <input type="text" name="word" placeholder="Word (e.g., Apple)" required>
+            <input type="text" name="translation" placeholder="Translation (e.g., Olma)" required>
+            <button type="submit">Add Word</button>
+        </form>
+        <hr>
+        <h2>Your Vocabulary List</h2>
+        <ul>
+            {% for vocab in vocabulary %}
+            <li>
+                {{ vocab[1] }} = {{ vocab[2] }}
+                <a href="/delete_vocab/{{ vocab[0] }}" class="delete" onclick="return confirm('Delete this word?')">Delete</a>
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="/logout">Logout</a>
+    </div>
+</body>
+</html>

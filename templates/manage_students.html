@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Students</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/manage_teachers" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        <div class="dashboard-content">
+            <h1>Manage Students - {{ teacher_name }}</h1>
+            
+            <form method="POST" action="/add_student/{{ teacher_id }}">
+                <input type="text" name="student_name" placeholder="Student Name (e.g., John)" required>
+                <button type="submit">Generate Login Code</button>
+            </form>
+            
+            <h2>Students</h2>
+            {% if students %}
+                {% for student in students %}
+                <div class="student-code-card">
+                    <div class="student-info">
+                        <strong>{{ student[3] }}</strong> ({{ student[1] }})
+                    </div>
+                    <div class="student-code">
+                        <code>{{ student[7] }}</code>
+                        <button onclick="copyCode('{{ student[7] }}')" class="copy-btn">📋 Copy</button>
+                    </div>
+                    <a href="/delete_student/{{ student[0] }}" class="delete" onclick="return confirm('Delete this student?')">Delete</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No students yet. Add one above.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function copyCode(code) {
+            navigator.clipboard.writeText(code);
+            alert('Code copied: ' + code);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        <div class="dashboard-content">
+            {% if question %}
+            <div class="quiz-card">
+                <h2>Translate this word:</h2>
+                <div class="big-word">{{ question }}</div>
+                <form method="POST">
+                    <input type="text" name="answer" placeholder="Type your answer" autofocus required>
+                    <input type="hidden" name="word_id" value="{{ word_id }}">
+                    <input type="hidden" name="correct_answer" value="{{ correct_answer }}">
+                    <button type="submit">Check Answer</button>
+                </form>
+            </div>
+            {% else %}
+            <p>No vocabulary available. Ask your teacher to add words.</p>
+            {% endif %}
+            
+            {% if result %}
+            <div class="result-box">{{ result }}</div>
+            <a href="/take_quiz" class="next-btn">Next Question →</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Profile - VocabQuiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h2>📖 VocabQuiz</h2>
+            </div>
+            <div class="nav-user">
+                <span>👋 {{ user.full_name }}</span>
+                <a href="/home" class="home-link-nav">← Back</a>
+                <a href="/logout" class="logout-btn">🚪 Logout</a>
+            </div>
+        </nav>
+
+        <div class="dashboard-content">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">👤</div>
+                    <h1>{{ user.full_name }}</h1>
+                    <p class="role-tag">{{ user.role|upper }}</p>
+                </div>
+                
+                <div class="profile-info">
+                    <div class="info-row">
+                        <span class="info-label">Username:</span>
+                        <span class="info-value">@{{ user.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Role:</span>
+                        <span class="info-value">{{ user.role }}</span>
+                    </div>
+                    {% if user.center_name %}
+                    <div class="info-row">
+                        <span class="info-label">Center:</span>
+                        <span class="info-value">{{ user.center_name }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-row">
+                        <span class="info-label">Member since:</span>
+                        <span class="info-value">{{ user.join_date }}</span>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button onclick="showChangePassword()" class="btn-secondary">Change Password</button>
+                </div>
+                
+                <div id="passwordForm" style="display:none; margin-top:20px;">
+                    <form method="POST" action="/change_password">
+                        <input type="password" name="old_password" placeholder="Current password" required>
+                        <input type="password" name="new_password" placeholder="New password" required>
+                        <button type="submit">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showChangePassword() {
+            var form = document.getElementById('passwordForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

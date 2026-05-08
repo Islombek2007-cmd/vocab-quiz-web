@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Progress</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        <div class="dashboard-content">
+            <h1>My Progress</h1>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon">✅</div><div><h3>{{ correct }}</h3><p>Correct</p></div></div>
+                <div class="stat-card"><div class="stat-icon">❌</div><div><h3>{{ wrong }}</h3><p>Wrong</p></div></div>
+                <div class="stat-card"><div class="stat-icon">📊</div><div><h3>{{ percentage }}%</h3><p>Accuracy</p></div></div>
+            </div>
+            <h2>Recent Attempts</h2>
+            <ul>
+                {% for item in recent %}
+                <li>{{ item[0] }} = {{ item[1] }} → {% if item[2] %}✅ Correct{% else %}❌ Wrong{% endif %} ({{ item[3] }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

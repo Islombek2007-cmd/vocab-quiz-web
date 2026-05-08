@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Admins</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        <div class="dashboard-content">
+            <h1>Manage Admins</h1>
+            <form method="POST" action="/add_admin">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="text" name="full_name" placeholder="Full Name" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="text" name="center_name" placeholder="Center Name">
+                <button type="submit">Add Admin</button>
+            </form>
+            <h2>Existing Admins</h2>
+            <ul>
+                {% for admin in admins %}
+                <li>{{ admin[2] }} (@{{ admin[1] }}) - {{ admin[3] if admin[3] else 'No center' }} 
+                    <a href="/delete_admin/{{ admin[0] }}" onclick="return confirm('Delete this admin?')">Delete</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

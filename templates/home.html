@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - VocabQuiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h2>📖 VocabQuiz</h2>
+            </div>
+            <div class="nav-user">
+                <span>👋 {{ user.full_name }}</span>
+                <span class="role-badge {{ user.role }}">@{{ user.username }} • {{ user.role|upper }}</span>
+                <a href="/profile" class="profile-btn">👤 Profile</a>
+                <a href="/logout" class="logout-btn">🚪 Logout</a>
+            </div>
+        </nav>
+
+        <div class="dashboard-content">
+            <div class="welcome-card">
+                <h1>Welcome back, {{ user.full_name }}!</h1>
+                <p>Ready to learn or manage vocabulary today?</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.total_words }}</h3>
+                        <p>Total Words</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.total_students }}</h3>
+                        <p>Students</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>{{ stats.total_quizzes }}</h3>
+                        <p>Quizzes Taken</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-grid">
+                {% if user.role == 'owner' %}
+                <a href="/manage_admins" class="action-card">
+                    <div class="action-icon">👑</div>
+                    <h3>Manage Admins</h3>
+                    <p>Add or remove administrators</p>
+                </a>
+                <a href="/all_stats" class="action-card">
+                    <div class="action-icon">📊</div>
+                    <h3>Global Stats</h3>
+                    <p>View all system statistics</p>
+                </a>
+                {% elif user.role == 'admin' %}
+                <a href="/manage_teachers" class="action-card">
+                    <div class="action-icon">👩‍🏫</div>
+                    <h3>Manage Teachers</h3>
+                    <p>Add or remove teachers</p>
+                </a>
+                {% elif user.role == 'teacher' %}
+                <a href="/manage_vocabulary" class="action-card">
+                    <div class="action-icon">📚</div>
+                    <h3>My Vocabulary</h3>
+                    <p>Add, edit, or delete words</p>
+                </a>
+                <a href="/my_students" class="action-card">
+                    <div class="action-icon">🎓</div>
+                    <h3>My Students</h3>
+                    <p>View student progress</p>
+                </a>
+                {% elif user.role == 'student' %}
+                <a href="/take_quiz" class="action-card">
+                    <div class="action-icon">🎯</div>
+                    <h3>Take Quiz</h3>
+                    <p>Test your knowledge</p>
+                </a>
+                <a href="/my_progress" class="action-card">
+                    <div class="action-icon">📈</div>
+                    <h3>My Progress</h3>
+                    <p>View your learning journey</p>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
