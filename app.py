@@ -418,7 +418,28 @@ def my_students():
     return render_template("my_students.html", students=student_data)
 
 
-
+@app.route("/bulk_add_vocab", methods=["POST"])
+def bulk_add_vocab():
+    if session.get("role") != "teacher":
+        return "Unauthorized", 401
+    
+    data = request.get_json()
+    lines = data.get('words', '').strip().split('\n')
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    for line in lines:
+        if '=' in line:
+            word, translation = line.split('=', 1)
+            cursor.execute(
+                "INSERT INTO vocabulary (word, translation, level, teacher_id) VALUES (%s, %s, 'easy', %s)",
+                (word.strip(), translation.strip(), session["user_id"])
+            )
+    
+    conn.commit()
+    conn.close()
+    return "OK", 200
 
 
 
@@ -449,11 +470,14 @@ def take_quiz():
     teacher_id = student[5] if student else None
     
     if not teacher_id:
-        return render_template("quiz.html", question=None, result="No teacher assigned to you.")
+        return render_template("quiz.html", question=None, result="No teacher assigned to you.", selected_level='easy')
+    
+    # Get level from URL parameter
+    selected_level = request.args.get('level', 'easy')
     
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, word, translation FROM vocabulary WHERE teacher_id = %s", (teacher_id,))
+    cursor.execute("SELECT id, word, translation FROM vocabulary WHERE teacher_id = %s AND level = %s", (teacher_id, selected_level))
     vocabulary = cursor.fetchall()
     conn.close()
     
@@ -493,7 +517,8 @@ def take_quiz():
                           question=question_word, 
                           word_id=current_word_id,
                           correct_answer=correct_answer,
-                          result=result)
+                          result=result,
+                          selected_level=selected_level)
 
 @app.route("/my_progress")
 def my_progress():

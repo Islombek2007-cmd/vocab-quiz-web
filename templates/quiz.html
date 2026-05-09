@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Quiz</title>
+    <title>Quiz - VocabQuiz</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -11,6 +11,24 @@
             <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
         </nav>
         <div class="dashboard-content">
+            
+            <!-- Level Selector -->
+            <div class="level-selector">
+                <label>📊 Select Difficulty Level:</label>
+                <select id="levelSelect" onchange="changeLevel()">
+                    <option value="easy" {% if selected_level == 'easy' %}selected{% endif %}>🟢 Easy</option>
+                    <option value="medium" {% if selected_level == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                    <option value="hard" {% if selected_level == 'hard' %}selected{% endif %}>🔴 Hard</option>
+                </select>
+            </div>
+
+            <script>
+                function changeLevel() {
+                    var level = document.getElementById('levelSelect').value;
+                    window.location.href = '/take_quiz?level=' + level;
+                }
+            </script>
+
             {% if question %}
             <div class="quiz-card">
                 <h2>Translate this word:</h2>
@@ -19,16 +37,21 @@
                     <input type="text" name="answer" placeholder="Type your answer" autofocus required>
                     <input type="hidden" name="word_id" value="{{ word_id }}">
                     <input type="hidden" name="correct_answer" value="{{ correct_answer }}">
+                    <input type="hidden" name="level" value="{{ selected_level }}">
                     <button type="submit">Check Answer</button>
                 </form>
             </div>
             {% else %}
-            <p>No vocabulary available. Ask your teacher to add words.</p>
+            <div class="no-words">
+                <p>📚 No vocabulary available at this level.</p>
+                <p>Ask your teacher to add words for <strong>{{ selected_level }}</strong> level.</p>
+                <a href="/take_quiz?level=easy" class="next-btn">Try Easy Level</a>
+            </div>
             {% endif %}
             
             {% if result %}
             <div class="result-box">{{ result }}</div>
-            <a href="/take_quiz" class="next-btn">Next Question →</a>
+            <a href="/take_quiz?level={{ selected_level }}" class="next-btn">Next Question →</a>
             {% endif %}
         </div>
     </div>
