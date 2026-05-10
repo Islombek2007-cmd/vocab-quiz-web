@@ -591,6 +591,77 @@ def logout():
     session.clear()
     return redirect(url_for("index"))
 
+
+
+
+
+
+
+
+
+
+@app.route("/create_test")
+def create_test():
+    if "user_id" not in session or session.get("role") != "teacher":
+        return redirect(url_for("home"))
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, word, translation FROM vocabulary WHERE teacher_id = %s", (session["user_id"],))
+    vocabulary = cursor.fetchall()
+    conn.close()
+    
+    return render_template("create_test.html", vocabulary=vocabulary)
+
+
+@app.route("/create_test", methods=["POST"])
+def create_test_post():
+    if "user_id" not in session or session.get("role") != "teacher":
+        return {"error": "Unauthorized"}, 401
+    
+    data = request.get_json()
+    test_name = data.get('name')
+    word_ids = data.get('word_ids', [])
+    
+    if len(word_ids) != 20:
+        return {"error": "Must select exactly 20 words"}, 400
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Create test
+    cursor.execute(
+        "INSERT INTO final_tests (teacher_id, name) VALUES (%s, %s) RETURNING id",
+        (session["user_id"], test_name)
+    )
+    test_id = cursor.fetchone()[0]
+    
+    # Add questions
+    for word_id in word_ids:
+        cursor.execute(
+            "SELECT word, translation FROM vocabulary WHERE id = %s",
+            (word_id,)
+        )
+        word_data = cursor.fetchone()
+        cursor.execute(
+            "INSERT INTO final_test_questions (test_id, word_id, word, translation) VALUES (%s, %s, %s, %s)",
+            (test_id, word_id, word_data[0], word_data[1])
+        )
+    
+    conn.commit()
+    conn.close()
+    
+    return {"success": True, "test_id": test_id}
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
