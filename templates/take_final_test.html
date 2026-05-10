@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final Test - VocabQuiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .question-card {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            display: none;
+        }
+        .question-card.active {
+            display: block;
+        }
+        .question-number {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        .answer-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .answer-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn-nav {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-nav.next {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+        .btn-nav.submit {
+            background: #10b981;
+            color: white;
+        }
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 10px;
+            margin-bottom: 30px;
+        }
+        .progress-fill {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            height: 100%;
+            border-radius: 20px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .warning {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .result-screen {
+            text-align: center;
+            padding: 40px;
+        }
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .score-number {
+            font-size: 56px;
+            font-weight: 800;
+        }
+        .score-percent {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        
+        <div class="dashboard-content">
+            <div class="test-container">
+                {% if already_taken %}
+                <div class="result-screen">
+                    <div class="score-circle">
+                        <div class="score-number">{{ score }}/{{ total }}</div>
+                        <div class="score-percent">{{ percentage }}%</div>
+                    </div>
+                    <h2>You've already taken this test!</h2>
+                    <p>Your score: {{ score }}/{{ total }} ({{ percentage }}%)</p>
+                    <a href="/home" class="next-btn">Go to Dashboard</a>
+                </div>
+                {% elif test_completed %}
+                <div class="result-screen">
+                    <div class="score-circle">
+                        <div class="score-number">{{ score }}/{{ total }}</div>
+                        <div class="score-percent">{{ percentage }}%</div>
+                    </div>
+                    <h2>🎉 Test Complete!</h2>
+                    <p>You got {{ score }} out of {{ total }} correct.</p>
+                    <p>Your score: {{ percentage }}%</p>
+                    <a href="/home" class="next-btn">Go to Dashboard</a>
+                </div>
+                {% else %}
+                <div class="form-card">
+                    <h1>📝 {{ test_name }}</h1>
+                    <p>Answer all 20 questions. You can only take this test once.</p>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <form id="testForm">
+                        {% for q in questions %}
+                        <div class="question-card" data-qnum="{{ loop.index }}">
+                            <div class="question-number">Question {{ loop.index }} of 20</div>
+                            <div class="question-text">Translate: <strong>{{ q.word }}</strong></div>
+                            <input type="text" class="answer-input" placeholder="Type your answer..." data-id="{{ q.id }}" data-correct="{{ q.translation }}">
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="nav-buttons">
+                            <button type="button" class="btn-nav" id="prevBtn" onclick="changeQuestion(-1)">← Previous</button>
+                            <button type="button" class="btn-nav next" id="nextBtn" onclick="changeQuestion(1)">Next →</button>
+                            <button type="button" class="btn-nav submit" id="submitBtn" onclick="submitTest()" style="display: none;">✅ Submit Test</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentQuestion = 0;
+        let totalQuestions = {{ questions|length }};
+        let answers = {};
+        
+        function showQuestion(index) {
+            let questions = document.querySelectorAll('.question-card');
+            questions.forEach((q, i) => {
+                q.classList.toggle('active', i === index);
+            });
+            
+            let progress = ((index + 1) / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            let prevBtn = document.getElementById('prevBtn');
+            let nextBtn = document.getElementById('nextBtn');
+            let submitBtn = document.getElementById('submitBtn');
+            
+            prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
+            
+            if (index === totalQuestions - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+            
+            // Load saved answer if exists
+            let savedAnswer = answers[index];
+            if (savedAnswer) {
+                document.querySelector('.question-card.active .answer-input').value = savedAnswer;
+            }
+        }
+        
+        function changeQuestion(direction) {
+            // Save current answer
+            let currentInput = document.querySelector('.question-card.active .answer-input');
+            if (currentInput) {
+                answers[currentQuestion] = currentInput.value;
+            }
+            
+            currentQuestion += direction;
+            if (currentQuestion < 0) currentQuestion = 0;
+            if (currentQuestion >= totalQuestions) currentQuestion = totalQuestions - 1;
+            showQuestion(currentQuestion);
+        }
+        
+        function submitTest() {
+            // Save last answer
+            let currentInput = document.querySelector('.question-card.active .answer-input');
+            if (currentInput) {
+                answers[currentQuestion] = currentInput.value;
+            }
+            
+            // Collect all answers
+            let results = [];
+            document.querySelectorAll('.question-card').forEach((card, idx) => {
+                let input = card.querySelector('.answer-input');
+                let wordId = input.dataset.id;
+                let userAnswer = answers[idx] || '';
+                let correctAnswer = input.dataset.correct;
+                
+                results.push({
+                    word_id: wordId,
+                    user_answer: userAnswer,
+                    correct_answer: correctAnswer
+                });
+            });
+            
+            fetch('/submit_final_test/{{ test_id }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({answers: results})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        }
+        
+        // Save answer when typing
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('answer-input')) {
+                answers[currentQuestion] = e.target.value;
+            }
+        });
+        
+        showQuestion(0);
+    </script>
+</body>
+</html>

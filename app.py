@@ -38,6 +38,124 @@ def get_user_stats():
     conn.close()
     return {"total_words": total_words, "total_students": total_students, "total_quizzes": total_quizzes}
 
+
+
+
+@app.route("/student_tests")
+def student_tests():
+    if "user_id" not in session or session.get("role") != "student":
+        return redirect(url_for("home"))
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Get all tests from student's teacher
+    student = get_user_by_id(session["user_id"])
+    teacher_id = student[5] if student else None
+    
+    cursor.execute("SELECT id, name FROM final_tests WHERE teacher_id = %s", (teacher_id,))
+    tests = cursor.fetchall()
+    
+    test_list = []
+    for test in tests:
+        cursor.execute("SELECT COUNT(*) FROM final_test_questions WHERE test_id = %s", (test[0],))
+        q_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT score, total FROM final_test_results WHERE student_id = %s AND test_id = %s", (session["user_id"], test[0]))
+        result = cursor.fetchone()
+        
+        test_list.append({
+            "id": test[0],
+            "name": test[1],
+            "question_count": q_count,
+            "taken": result is not None,
+            "score": result[0] if result else None
+        })
+    
+    conn.close()
+    return render_template("student_tests.html", tests=test_list)
+
+
+@app.route("/take_final_test/<int:test_id>")
+def take_final_test(test_id):
+    if "user_id" not in session or session.get("role") != "student":
+        return redirect(url_for("home"))
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Check if already taken
+    cursor.execute("SELECT score, total, percentage FROM final_test_results WHERE student_id = %s AND test_id = %s", 
+                   (session["user_id"], test_id))
+    result = cursor.fetchone()
+    
+    if result:
+        return render_template("take_final_test.html", 
+                              already_taken=True,
+                              score=result[0],
+                              total=result[1],
+                              percentage=result[2],
+                              test_completed=False)
+    
+    cursor.execute("SELECT name FROM final_tests WHERE id = %s", (test_id,))
+    test_name = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT id, word, translation FROM final_test_questions WHERE test_id = %s", (test_id,))
+    questions = cursor.fetchall()
+    
+    conn.close()
+    
+    return render_template("take_final_test.html", 
+                          test_id=test_id,
+                          test_name=test_name,
+                          questions=questions,
+                          already_taken=False,
+                          test_completed=False)
+
+
+@app.route("/submit_final_test/<int:test_id>", methods=["POST"])
+def submit_final_test(test_id):
+    if "user_id" not in session or session.get("role") != "student":
+        return {"error": "Unauthorized"}, 401
+    
+    data = request.get_json()
+    answers = data.get('answers', [])
+    
+    score = 0
+    for ans in answers:
+        if ans['user_answer'].strip().lower() == ans['correct_answer'].lower():
+            score += 1
+    
+    total = len(answers)
+    percentage = round((score / total) * 100)
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            "INSERT INTO final_test_results (student_id, test_id, score, total, percentage) VALUES (%s, %s, %s, %s, %s)",
+            (session["user_id"], test_id, score, total, percentage)
+        )
+        conn.commit()
+    except Exception as e:
+        return {"error": str(e)}, 400
+    finally:
+        conn.close()
+    
+    return {"success": True, "score": score, "total": total, "percentage": percentage}
+
+
+
+
+
+
+
+
+
+
+
+
 # ============ Routes ============
 
 @app.route("/", methods=["GET"])

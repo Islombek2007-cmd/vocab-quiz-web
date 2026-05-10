@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Available Tests - VocabQuiz</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="navbar">
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
+            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+        </nav>
+        
+        <div class="dashboard-content">
+            <div class="page-header">
+                <h1>📝 Available Final Tests</h1>
+                <p>Select a test to begin</p>
+            </div>
+            
+            <div class="action-grid">
+                {% for test in tests %}
+                <a href="/take_final_test/{{ test.id }}" class="action-card">
+                    <div class="action-icon">📋</div>
+                    <h3>{{ test.name }}</h3>
+                    <p>{{ test.question_count }} questions</p>
+                    {% if test.taken %}
+                    <p style="color: #10b981;">✓ Completed: {{ test.score }}/{{ test.question_count }}</p>
+                    {% else %}
+                    <p style="color: #f59e0b;">⚡ Not taken yet</p>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            
+            {% if not tests %}
+            <p>No tests available yet. Check back later.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
