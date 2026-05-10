@@ -1,32 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Manage Admins</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Manage Admins - VocabQuiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="dashboard-container">
         <nav class="navbar">
             <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
-            <div><a href="/home" class="home-link-nav">← Back</a> | <a href="/logout">Logout</a></div>
+            <div class="nav-user">
+                <a href="/home" class="home-link-nav">← Dashboard</a>
+                <a href="/logout" class="logout-btn">🚪 Logout</a>
+            </div>
         </nav>
+        
         <div class="dashboard-content">
-            <h1>Manage Admins</h1>
-            <form method="POST" action="/add_admin">
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="text" name="full_name" placeholder="Full Name" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="text" name="center_name" placeholder="Center Name">
-                <button type="submit">Add Admin</button>
-            </form>
-            <h2>Existing Admins</h2>
-            <ul>
-                {% for admin in admins %}
-                <li>{{ admin[2] }} (@{{ admin[1] }}) - {{ admin[3] if admin[3] else 'No center' }} 
-                    <a href="/delete_admin/{{ admin[0] }}" onclick="return confirm('Delete this admin?')">Delete</a>
-                </li>
-                {% endfor %}
-            </ul>
+            <div class="page-header">
+                <h1>👑 Manage Administrators</h1>
+                <p>Add or remove system administrators</p>
+            </div>
+            
+            <div class="form-card">
+                <h2>➕ Add New Admin</h2>
+                <form method="POST" action="/add_admin">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" name="username" placeholder="Enter username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="full_name" placeholder="Enter full name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" placeholder="Enter password" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Center Name</label>
+                            <input type="text" name="center_name" placeholder="Center name (optional)">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">➕ Add Admin</button>
+                </form>
+            </div>
+            
+            <div class="data-table">
+                <h2>📋 Existing Admins</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Center</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for admin in admins %}
+                            <tr>
+                                <td><strong>{{ admin[2] }}</strong></td>
+                                <td>@{{ admin[1] }}</td>
+                                <td>{{ admin[3] or '—' }}</td>
+                                <td>
+                                    <a href="/delete_admin/{{ admin[0] }}" class="btn-delete" onclick="return confirm('Delete this admin?')">🗑️ Delete</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </body>

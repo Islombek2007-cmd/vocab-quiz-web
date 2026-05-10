@@ -2,17 +2,15 @@
 <html>
 <head>
     <title>Dashboard - VocabQuiz</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="dashboard-container">
         <nav class="navbar">
-            <div class="nav-brand">
-                <h2>📖 VocabQuiz</h2>
-            </div>
+            <div class="nav-brand"><h2>📖 VocabQuiz</h2></div>
             <div class="nav-user">
                 <span>👋 {{ user.full_name }}</span>
-                <span class="role-badge {{ user.role }}">@{{ user.username }} • {{ user.role|upper }}</span>
+                <span class="role-badge {{ user.role }}">{{ user.role|upper }}</span>
                 <a href="/profile" class="profile-btn">👤 Profile</a>
                 <a href="/logout" class="logout-btn">🚪 Logout</a>
             </div>
@@ -20,7 +18,7 @@
 
         <div class="dashboard-content">
             <div class="welcome-card">
-                <h1>Welcome back, {{ user.full_name }}!</h1>
+                <h1>Hello, {{ user.full_name }}! 👋</h1>
                 <p>Ready to learn or manage vocabulary today?</p>
             </div>
 
@@ -54,11 +52,6 @@
                     <div class="action-icon">👑</div>
                     <h3>Manage Admins</h3>
                     <p>Add or remove administrators</p>
-                </a>
-                <a href="/all_stats" class="action-card">
-                    <div class="action-icon">📊</div>
-                    <h3>Global Stats</h3>
-                    <p>View all system statistics</p>
                 </a>
                 {% elif user.role == 'admin' %}
                 <a href="/manage_teachers" class="action-card">

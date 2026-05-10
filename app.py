@@ -427,6 +427,7 @@ def bulk_add_vocab():
     
     data = request.get_json()
     lines = data.get('words', '').strip().split('\n')
+    level = data.get('level', 'easy')
     
     conn = get_connection()
     cursor = conn.cursor()
@@ -435,13 +436,43 @@ def bulk_add_vocab():
         if '=' in line:
             word, translation = line.split('=', 1)
             cursor.execute(
-                "INSERT INTO vocabulary (word, translation, level, teacher_id) VALUES (%s, %s, 'easy', %s)",
-                (word.strip(), translation.strip(), session["user_id"])
+                "INSERT INTO vocabulary (word, translation, level, teacher_id) VALUES (%s, %s, %s, %s)",
+                (word.strip(), translation.strip(), level, session["user_id"])
             )
     
     conn.commit()
     conn.close()
     return "OK", 200
+
+
+
+
+
+
+@app.route("/teacher_add_student", methods=["POST"])
+def teacher_add_student():
+    if "user_id" not in session or session.get("role") != "teacher":
+        return redirect(url_for("home"))
+    
+    student_name = request.form["student_name"].strip()
+    login_code = generate_login_code()
+    username = f"student_{login_code[:8]}"
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, full_name, role, created_by, login_code) VALUES (%s, %s, 'student', %s, %s)",
+            (username, student_name, session["user_id"], login_code)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+    conn.close()
+    
+    return redirect(url_for("my_students"))
+
+
 
 
 
