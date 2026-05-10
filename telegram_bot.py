@@ -52,7 +52,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     student_sessions[user_id] = {'step': 'waiting_for_code'}
     
-    web_app_url = "https://vocabquiz-01jb.onrender.com"
+    web_app_url = "https://vocabquiz-r9ya.onrender.com"
     
     keyboard = [[KeyboardButton("🚀 Open Vocabulary Quiz", web_app=WebAppInfo(url=web_app_url))]]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
