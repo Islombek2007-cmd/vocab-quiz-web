@@ -24,5 +24,23 @@
             </ul>
         </div>
     </div>
+
+
+    <h2>Bulk Import Words</h2>
+<textarea id="bulkWords" rows="5" cols="50" placeholder="apple=olma
+banana=banan
+car=mashina"></textarea>
+<button onclick="bulkAdd()">Add All Words</button>
+
+<script>
+function bulkAdd() {
+    let text = document.getElementById('bulkWords').value;
+    fetch('/bulk_add_vocab', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({words: text})
+    }).then(() => location.reload());
+}
+</script>
 </body>
 </html>

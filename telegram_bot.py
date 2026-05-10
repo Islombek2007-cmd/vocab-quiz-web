@@ -2,24 +2,8 @@ import os
 import psycopg2
 import random
 import logging
-from telegram import Update
+from telegram import Update, WebAppInfo, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-
-
-from telegram import WebAppInfo, KeyboardButton, ReplyKeyboardMarkup
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    web_app_url = "https://vocabquiz-01jb.onrender.com"
-    
-    keyboard = [[KeyboardButton("🚀 Open Vocabulary Quiz", web_app=WebAppInfo(url=web_app_url))]]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    
-    await update.message.reply_text(
-        "🎓 Welcome! Click the button below to start your vocabulary quiz inside Telegram.",
-        reply_markup=reply_markup
-    )
 
 DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://vocab_quiz_bot_user:8l8V1ZGeAwpZMo8cW52UBzAAqfqa43mn@dpg-d7v295naqgkc73d3609g-a/vocab_quiz_bot')
 
@@ -63,10 +47,39 @@ def get_student_stats(student_id):
     conn.close()
     return correct, wrong
 
+# ============ WEB APP BUTTON ============
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     student_sessions[user_id] = {'step': 'waiting_for_code'}
-    await update.message.reply_text("🎓 Welcome to VocabQuiz!\n\nPlease enter your login code from your teacher.")
+    
+    web_app_url = "https://vocabquiz-01jb.onrender.com"
+    
+    keyboard = [[KeyboardButton("🚀 Open Vocabulary Quiz", web_app=WebAppInfo(url=web_app_url))]]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
+    await update.message.reply_text(
+        "🎓 Welcome to VocabQuiz!\n\n"
+        "📚 Click the button below to open your vocabulary quiz inside Telegram.\n\n"
+        "Or type your login code from your teacher to take quizzes in chat.",
+        reply_markup=reply_markup
+    )
+
+async def send_quiz_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    teacher_id = student_sessions[user_id]['teacher_id']
+    vocabulary = get_vocabulary_by_teacher(teacher_id)
+    
+    if not vocabulary:
+        await update.message.reply_text("No vocabulary available.")
+        student_sessions[user_id]['step'] = 'ready'
+        return
+    
+    random_word = random.choice(vocabulary)
+    word_id, word, translation = random_word
+    student_sessions[user_id]['current_word_id'] = word_id
+    student_sessions[user_id]['correct_answer'] = translation
+    student_sessions[user_id]['step'] = 'quiz_active'
+    await update.message.reply_text(f"📖 Translate: {word}")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -97,23 +110,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_quiz_result(student_sessions[user_id]['student_id'], current_word_id, is_correct)
         await update.message.reply_text("✅ Correct!" if is_correct else f"❌ Wrong! Answer: {correct_answer}")
         await send_quiz_question(update, context)
-
-async def send_quiz_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    teacher_id = student_sessions[user_id]['teacher_id']
-    vocabulary = get_vocabulary_by_teacher(teacher_id)
-    
-    if not vocabulary:
-        await update.message.reply_text("No vocabulary available.")
-        student_sessions[user_id]['step'] = 'ready'
-        return
-    
-    random_word = random.choice(vocabulary)
-    word_id, word, translation = random_word
-    student_sessions[user_id]['current_word_id'] = word_id
-    student_sessions[user_id]['correct_answer'] = translation
-    student_sessions[user_id]['step'] = 'quiz_active'
-    await update.message.reply_text(f"📖 Translate: {word}")
 
 async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id

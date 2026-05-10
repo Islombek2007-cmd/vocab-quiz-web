@@ -35,13 +35,14 @@ def setup_database():
     
     # Vocabulary table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS vocabulary (
-            id SERIAL PRIMARY KEY,
-            word TEXT,
-            translation TEXT,
-            teacher_id INTEGER
-        )
-    ''')
+    CREATE TABLE IF NOT EXISTS vocabulary (
+        id SERIAL PRIMARY KEY,
+        word TEXT,
+        translation TEXT,
+        level TEXT DEFAULT 'easy',
+        teacher_id INTEGER
+    )
+''')
     
     # Quiz results table
     cursor.execute('''
