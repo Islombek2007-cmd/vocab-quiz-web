@@ -13,6 +13,8 @@ from database.db import get_connection
 # ============ Helper Functions ============
 
 def generate_login_code():
+    import secrets
+    import string
     chars = string.ascii_letters + string.digits
     return ''.join(secrets.choice(chars) for _ in range(25))
 
@@ -305,8 +307,8 @@ def add_student(teacher_id):
             (username, student_name, teacher_id, login_code)
         )
         conn.commit()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error: {e}")
     conn.close()
     
     return redirect(url_for("manage_students", teacher_id=teacher_id))
