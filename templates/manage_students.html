@@ -23,11 +23,11 @@
                 {% for student in students %}
                 <div class="student-code-card">
                     <div class="student-info">
-                        <strong>{{ student[3] }}</strong> ({{ student[1] }})
+                        <strong>{{ student[2] }}</strong> (@{{ student[1] }})
                     </div>
                     <div class="student-code">
-                        <code>{{ student[7] }}</code>
-                        <button onclick="copyCode('{{ student[7] }}')" class="copy-btn">📋 Copy</button>
+                        <code>{{ student[3] }}</code>
+                        <button onclick="copyCode('{{ student[3] }}')" class="copy-btn">📋 Copy</button>
                     </div>
                     <a href="/delete_student/{{ student[0] }}" class="delete" onclick="return confirm('Delete this student?')">Delete</a>
                 </div>
