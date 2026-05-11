@@ -352,27 +352,32 @@ def teacher_test_results():
     conn = get_connection()
     cursor = conn.cursor()
     
-    # Get all tests by this teacher
-    cursor.execute("SELECT id, name FROM final_tests WHERE teacher_id = %s", (session["user_id"],))
-    tests = cursor.fetchall()
+    try:
+        # Get all tests by this teacher
+        cursor.execute("SELECT id, name FROM final_tests WHERE teacher_id = %s", (session["user_id"],))
+        tests = cursor.fetchall()
+        
+        results = []
+        for test in tests:
+            cursor.execute("""
+                SELECT u.full_name, fr.score, fr.total, fr.percentage, fr.taken_at
+                FROM final_test_results fr
+                JOIN users u ON fr.student_id = u.id
+                WHERE fr.test_id = %s
+                ORDER BY fr.percentage DESC
+            """, (test[0],))
+            students = cursor.fetchall()
+            results.append({
+                "test_id": test[0],
+                "test_name": test[1],
+                "students": students
+            })
+    except Exception as e:
+        print(f"Error: {e}")
+        results = []
+    finally:
+        conn.close()
     
-    results = []
-    for test in tests:
-        cursor.execute("""
-            SELECT u.full_name, fr.score, fr.total, fr.percentage, fr.taken_at
-            FROM final_test_results fr
-            JOIN users u ON fr.student_id = u.id
-            WHERE fr.test_id = %s
-            ORDER BY fr.percentage DESC
-        """, (test[0],))
-        students = cursor.fetchall()
-        results.append({
-            "test_id": test[0],
-            "test_name": test[1],
-            "students": students
-        })
-    
-    conn.close()
     return render_template("teacher_test_results.html", results=results)
 
 

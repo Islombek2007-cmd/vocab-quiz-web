@@ -3,20 +3,6 @@
 <head>
     <title>Test Results - VocabQuiz</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .score-high {
-            color: #10b981;
-            font-weight: bold;
-        }
-        .score-medium {
-            color: #f59e0b;
-            font-weight: bold;
-        }
-        .score-low {
-            color: #dc2626;
-            font-weight: bold;
-        }
-    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -53,11 +39,11 @@
                                     <td>{{ student[1] }}/{{ student[2] }}</td>
                                     <td>
                                         {% if student[3] >= 80 %}
-                                        <span class="score-high">{{ student[3] }}%</span>
+                                        <span style="color: #10b981; font-weight: bold;">{{ student[3] }}%</span>
                                         {% elif student[3] >= 60 %}
-                                        <span class="score-medium">{{ student[3] }}%</span>
+                                        <span style="color: #f59e0b; font-weight: bold;">{{ student[3] }}%</span>
                                         {% else %}
-                                        <span class="score-low">{{ student[3] }}%</span>
+                                        <span style="color: #dc2626; font-weight: bold;">{{ student[3] }}%</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ student[4][:16] if student[4] else '—' }}</td>
