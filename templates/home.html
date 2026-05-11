@@ -47,18 +47,28 @@
             </div>
 
             <div class="action-grid">
+                <!-- OWNER BUTTONS -->
                 {% if user.role == 'owner' %}
                 <a href="/manage_admins" class="action-card">
                     <div class="action-icon">👑</div>
                     <h3>Manage Admins</h3>
                     <p>Add or remove administrators</p>
                 </a>
+                <a href="/all_stats" class="action-card">
+                    <div class="action-icon">📊</div>
+                    <h3>Global Stats</h3>
+                    <p>View system statistics</p>
+                </a>
+
+                <!-- ADMIN BUTTONS -->
                 {% elif user.role == 'admin' %}
                 <a href="/manage_teachers" class="action-card">
                     <div class="action-icon">👩‍🏫</div>
                     <h3>Manage Teachers</h3>
                     <p>Add or remove teachers</p>
                 </a>
+
+                <!-- TEACHER BUTTONS -->
                 {% elif user.role == 'teacher' %}
                 <a href="/manage_vocabulary" class="action-card">
                     <div class="action-icon">📚</div>
@@ -70,6 +80,18 @@
                     <h3>My Students</h3>
                     <p>View student progress</p>
                 </a>
+                <a href="/create_test" class="action-card">
+                    <div class="action-icon">📝</div>
+                    <h3>Create Final Test</h3>
+                    <p>Create a 20-word test for students</p>
+                </a>
+                <a href="/teacher_test_results" class="action-card">
+                    <div class="action-icon">📊</div>
+                    <h3>Test Results</h3>
+                    <p>View student final test scores</p>
+                </a>
+
+                <!-- STUDENT BUTTONS -->
                 {% elif user.role == 'student' %}
                 <a href="/take_quiz" class="action-card">
                     <div class="action-icon">🎯</div>
@@ -81,23 +103,11 @@
                     <h3>My Progress</h3>
                     <p>View your learning journey</p>
                 </a>
-
-                <a href="/create_test" class="action-card">
-                    <div class="action-icon">📝</div>
-                    <h3>Create Final Test</h3>
-                    <p>Create a 20-word test for students</p>
-                </a>
-
-
                 <a href="/student_tests" class="action-card">
                     <div class="action-icon">📝</div>
                     <h3>Final Tests</h3>
                     <p>Take teacher-created tests</p>
                 </a>
-
-
-                
-                
                 {% endif %}
             </div>
         </div>
