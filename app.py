@@ -352,12 +352,13 @@ def teacher_test_results():
     conn = get_connection()
     cursor = conn.cursor()
     
+    results = []
+    
     try:
         # Get all tests by this teacher
         cursor.execute("SELECT id, name FROM final_tests WHERE teacher_id = %s", (session["user_id"],))
         tests = cursor.fetchall()
         
-        results = []
         for test in tests:
             cursor.execute("""
                 SELECT u.full_name, fr.score, fr.total, fr.percentage, fr.taken_at
@@ -373,13 +374,12 @@ def teacher_test_results():
                 "students": students
             })
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in teacher_test_results: {e}")
         results = []
     finally:
         conn.close()
     
     return render_template("teacher_test_results.html", results=results)
-
 
 
 
