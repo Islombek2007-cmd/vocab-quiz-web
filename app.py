@@ -339,6 +339,49 @@ def api_stats():
     
     return {"admins": admins, "teachers": teachers, "students": students, "words": words, "quizzes": quizzes}
 
+
+
+
+
+
+@app.route("/teacher_test_results")
+def teacher_test_results():
+    if "user_id" not in session or session.get("role") != "teacher":
+        return redirect(url_for("home"))
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Get all tests by this teacher
+    cursor.execute("SELECT id, name FROM final_tests WHERE teacher_id = %s", (session["user_id"],))
+    tests = cursor.fetchall()
+    
+    results = []
+    for test in tests:
+        cursor.execute("""
+            SELECT u.full_name, fr.score, fr.total, fr.percentage, fr.taken_at
+            FROM final_test_results fr
+            JOIN users u ON fr.student_id = u.id
+            WHERE fr.test_id = %s
+            ORDER BY fr.percentage DESC
+        """, (test[0],))
+        students = cursor.fetchall()
+        results.append({
+            "test_id": test[0],
+            "test_name": test[1],
+            "students": students
+        })
+    
+    conn.close()
+    return render_template("teacher_test_results.html", results=results)
+
+
+
+
+
+
+
+
 # ============ Admin Routes ============
 
 @app.route("/manage_teachers")
