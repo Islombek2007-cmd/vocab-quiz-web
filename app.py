@@ -360,6 +360,7 @@ def teacher_test_results():
         tests = cursor.fetchall()
         
         for test in tests:
+            # Get results for this test
             cursor.execute("""
                 SELECT u.full_name, fr.score, fr.total, fr.percentage, fr.taken_at
                 FROM final_test_results fr
@@ -374,10 +375,14 @@ def teacher_test_results():
                 "students": students
             })
     except Exception as e:
-        print(f"Error in teacher_test_results: {e}")
+        print(f"Error: {e}")
         results = []
     finally:
         conn.close()
+    
+    # If no tests exist, show empty state
+    if not results:
+        return render_template("teacher_test_results.html", results=[])
     
     return render_template("teacher_test_results.html", results=results)
 
