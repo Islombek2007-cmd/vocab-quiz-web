@@ -47,21 +47,49 @@ def get_student_stats(student_id):
     conn.close()
     return correct, wrong
 
-# ============ WEB APP BUTTON ============
+# ============ Bot Handlers ============
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     student_sessions[user_id] = {'step': 'waiting_for_code'}
     
     web_app_url = "https://vocabquiz-r9ya.onrender.com"
     
-    keyboard = [[KeyboardButton("🚀 Open Vocabulary Quiz", web_app=WebAppInfo(url=web_app_url))]]
+    keyboard = [
+        [KeyboardButton("📚 Open Quiz", web_app=WebAppInfo(url=web_app_url))],
+        [KeyboardButton("❓ Help"), KeyboardButton("ℹ️ About")]
+    ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
     await update.message.reply_text(
         "🎓 Welcome to VocabQuiz!\n\n"
-        "📚 Click the button below to open your vocabulary quiz inside Telegram.\n\n"
+        "Click the button below to open your vocabulary quiz inside Telegram.\n\n"
         "Or type your login code from your teacher to take quizzes in chat.",
         reply_markup=reply_markup
+    )
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📖 *How to use VocabQuiz:*\n\n"
+        "1. Get a login code from your teacher\n"
+        "2. Click 'Open Quiz' or type your code\n"
+        "3. Take quizzes to learn vocabulary\n"
+        "4. Check your progress with /stats\n\n"
+        "*Commands:*\n"
+        "/start - Start the bot\n"
+        "/quiz - Start a quiz\n"
+        "/stats - View your progress\n"
+        "/logout - Logout",
+        parse_mode='Markdown'
+    )
+
+async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📚 *VocabQuiz*\n\n"
+        "Learn languages with fun quizzes!\n\n"
+        "Created for students and teachers.\n\n"
+        f"Web App: https://vocabquiz-r9ya.onrender.com",
+        parse_mode='Markdown'
     )
 
 async def send_quiz_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,6 +112,13 @@ async def send_quiz_question(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text.strip()
+    
+    if text == "❓ Help":
+        await help_command(update, context)
+        return
+    elif text == "ℹ️ About":
+        await about_command(update, context)
+        return
     
     if user_id not in student_sessions:
         student_sessions[user_id] = {'step': 'waiting_for_code'}
@@ -133,6 +168,8 @@ async def logout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     student_sessions.pop(user_id, None)
     await update.message.reply_text("Logged out. /start to login again.")
 
+# ============ Main ============
+
 def main():
     TOKEN = "8765382148:AAEMI5stbL1tXPhMb1yxFDs8G1vrQNPa4IY"
     
@@ -141,10 +178,14 @@ def main():
         return
     
     application = Application.builder().token(TOKEN).build()
+    
+    # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("quiz", quiz_command))
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("logout", logout_command))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("about", about_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     print("Telegram bot is running...")
